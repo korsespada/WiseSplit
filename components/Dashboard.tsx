@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { calculateSimplifiedDebts, Balance } from '@/lib/debtUtils';
 import { AddExpenseDialog } from '@/components/AddExpenseDialog';
 import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export function Dashboard() {
     const { currentGroup, expenses, members, user } = useStore();
@@ -28,7 +29,7 @@ export function Dashboard() {
 
     const getUserName = (id: number) => {
         const member = members.find(m => m.id === id);
-        return member ? (member.id === user?.id ? 'You' : member.first_name) : `User ${id}`;
+        return member ? (member.id === user?.id ? 'Вы' : member.first_name) : `Пользователь ${id}`;
     };
 
     return (
@@ -39,20 +40,20 @@ export function Dashboard() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Balances</CardTitle>
+                    <CardTitle>Баланс</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {simplifiedDebts.length === 0 ? (
-                        <p className="text-muted-foreground text-center">All settled up!</p>
+                        <p className="text-muted-foreground text-center">Все долги выплачены!</p>
                     ) : (
                         <ul className="space-y-2">
                             {simplifiedDebts.map((debt, idx) => (
-                                <li key={idx} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                                    <span>
-                                        <span className="font-semibold text-red-600">{getUserName(debt.from)}</span> owes{' '}
+                                <li key={idx} className="flex justify-between items-center bg-gray-100/50 p-3 rounded-lg">
+                                    <span className="text-sm">
+                                        <span className="font-semibold text-red-600">{getUserName(debt.from)}</span> должен{' '}
                                         <span className="font-semibold text-green-600">{getUserName(debt.to)}</span>
                                     </span>
-                                    <span className="font-bold">${debt.amount.toFixed(2)}</span>
+                                    <span className="font-bold whitespace-nowrap">{debt.amount.toFixed(2)} ₽</span>
                                 </li>
                             ))}
                         </ul>
@@ -62,22 +63,22 @@ export function Dashboard() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
+                    <CardTitle>История</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-4">
                         {expenses.map(exp => (
-                            <li key={exp.id} className="border-b last:border-0 pb-2">
+                            <li key={exp.id} className="border-b last:border-0 pb-3">
                                 <div className="flex justify-between font-medium">
                                     <span>{exp.description}</span>
-                                    <span>${exp.amount.toFixed(2)}</span>
+                                    <span className="font-bold">{exp.amount.toFixed(2)} ₽</span>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                    Paid by {getUserName(exp.payer_id)} • {format(new Date(exp.created_at), 'MMM d, h:mm a')}
+                                <div className="text-sm text-muted-foreground mt-1">
+                                    Оплатил {getUserName(exp.payer_id)} • {format(new Date(exp.created_at), 'd MMM, HH:mm', { locale: ru })}
                                 </div>
                             </li>
                         ))}
-                        {expenses.length === 0 && <p className="text-center text-gray-400">No expenses yet.</p>}
+                        {expenses.length === 0 && <p className="text-center text-muted-foreground py-4">Трат пока нет.</p>}
                     </ul>
                 </CardContent>
             </Card>

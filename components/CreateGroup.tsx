@@ -36,10 +36,8 @@ export function CreateGroup() {
             await fetchGroupData(group.id);
 
             // Generate invite link
-            // Use generic bot link or specific if known. 
-            // For now, we utilize the start_param mechanism.
             const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
-            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/start?startapp=${group.id}`)}&text=${encodeURIComponent(`Join my group "${group.name}" on FairShare!`)}`;
+            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/start?startapp=${group.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${group.name}" в FairShare!`)}`;
 
             let WebApp;
             if (typeof window !== 'undefined') {
@@ -51,13 +49,13 @@ export function CreateGroup() {
             if (WebApp && WebApp.initData) {
                 WebApp.openTelegramLink(inviteLink);
             } else {
-                alert("Group created! Share this ID: " + group.id);
+                alert("Группа создана! Поделитесь этим ID: " + group.id);
             }
 
         } catch (e) {
             console.error(e);
             const errorMessage = (e as any)?.message || JSON.stringify(e);
-            alert(`Error creating group: ${errorMessage}`);
+            alert(`Ошибка при создании группы: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -66,11 +64,11 @@ export function CreateGroup() {
     return (
         <Card className="w-full max-w-md mx-auto mt-10">
             <CardHeader>
-                <CardTitle>Create a New Group</CardTitle>
+                <CardTitle>Создать новую группу</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <Input
-                    placeholder="Group Name (e.g. Trip to Paris)"
+                    placeholder="Название группы (напр. Поездка в Питер)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
@@ -79,7 +77,7 @@ export function CreateGroup() {
                     disabled={loading || !name}
                     className="w-full"
                 >
-                    {loading ? 'Creating...' : 'Create & Invite Friends'}
+                    {loading ? 'Создание...' : 'Создать и пригласить друзей'}
                 </Button>
             </CardContent>
         </Card>
