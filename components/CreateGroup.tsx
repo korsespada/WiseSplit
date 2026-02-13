@@ -56,7 +56,8 @@ export function CreateGroup() {
 
         } catch (e) {
             console.error(e);
-            alert('Error creating group');
+            const errorMessage = (e as any)?.message || JSON.stringify(e);
+            alert(`Error creating group: ${errorMessage}`);
         } finally {
             setLoading(false);
         }

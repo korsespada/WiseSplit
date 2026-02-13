@@ -50,8 +50,8 @@ ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE splits ENABLE ROW LEVEL SECURITY;
 
 -- Allow read/write for all (logic handled in app for MVP, refine later)
-CREATE POLICY "Public Access" ON users FOR ALL USING (true);
-CREATE POLICY "Public Access" ON groups FOR ALL USING (true);
-CREATE POLICY "Public Access" ON group_members FOR ALL USING (true);
-CREATE POLICY "Public Access" ON expenses FOR ALL USING (true);
-CREATE POLICY "Public Access" ON splits FOR ALL USING (true);
+CREATE POLICY "Public Access" ON users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Access" ON groups FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Access" ON group_members FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Access" ON expenses FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Access" ON splits FOR ALL USING (true) WITH CHECK (true);

@@ -9,8 +9,10 @@ interface AppState {
     expenses: Expense[];
     isLoading: boolean;
 
+    userGroups: Group[];
     setUser: (user: User) => void;
     setGroup: (group: Group) => void;
+    fetchUserGroups: (userId: number) => Promise<Group[]>;
     fetchGroupData: (groupId: string) => Promise<void>;
     addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
 }
@@ -19,11 +21,28 @@ export const useStore = create<AppState>((set, get) => ({
     user: null,
     currentGroup: null,
     members: [],
+    userGroups: [],
     expenses: [],
     isLoading: false,
 
     setUser: (user) => set({ user }),
     setGroup: (group) => set({ currentGroup: group }),
+
+    fetchUserGroups: async (userId) => {
+        const { data, error } = await supabase
+            .from('group_members')
+            .select('groups(*)')
+            .eq('user_id', userId);
+
+        if (error) {
+            console.error('Error fetching user groups:', error);
+            return [];
+        }
+
+        const groups = (data?.map((item: any) => item.groups) || []) as Group[];
+        set({ userGroups: groups });
+        return groups;
+    },
 
     fetchGroupData: async (groupId) => {
         set({ isLoading: true, expenses: [], members: [] });

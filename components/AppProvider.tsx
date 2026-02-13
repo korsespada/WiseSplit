@@ -10,7 +10,7 @@ const AppContext = createContext<{ isLoading: boolean }>({ isLoading: true });
 export const useApp = () => useContext(AppContext);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-    const { setUser, setGroup, fetchGroupData } = useStore();
+    const { setUser, setGroup, fetchGroupData, fetchUserGroups } = useStore();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -50,6 +50,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 if (startParam) {
                     // Attempt to join group automatically
                     await joinGroup(startParam, tgUser.id);
+                } else {
+                    // Just fetch groups and select the first one if it exists
+                    const groups = await fetchUserGroups(tgUser.id);
+                    if (groups.length > 0) {
+                        await fetchGroupData(groups[0].id);
+                    }
                 }
             } else {
                 // Fallback or Dev mode (Mock User)
@@ -59,7 +65,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                     first_name: "Dev User",
                     username: "devuser",
                 };
+
+                // Ensure mock user exists in DB to prevent foreign key errors
+                const { error } = await supabase.from('users').upsert(mockUser);
+                if (error) console.error("Error ensuring mock user:", error);
+
                 setUser(mockUser);
+
+                // Fetch groups for the user
+                const groups = await fetchUserGroups(mockUser.id);
+                if (groups.length > 0 && !WebApp.initDataUnsafe?.start_param) {
+                    await fetchGroupData(groups[0].id);
+                }
             }
             setIsLoading(false);
         };
