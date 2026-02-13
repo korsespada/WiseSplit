@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import WebApp from '@twa-dev/sdk';
+
 
 export function CreateGroup() {
     const { user, setGroup, fetchGroupData } = useStore();
@@ -38,9 +38,17 @@ export function CreateGroup() {
             // Generate invite link
             // Use generic bot link or specific if known. 
             // For now, we utilize the start_param mechanism.
-            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/YourBotName/start?startapp=${group.id}`)}&text=${encodeURIComponent(`Join my group "${group.name}" on FairShare!`)}`;
+            const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
+            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/start?startapp=${group.id}`)}&text=${encodeURIComponent(`Join my group "${group.name}" on FairShare!`)}`;
 
-            if (WebApp.initData) {
+            let WebApp;
+            if (typeof window !== 'undefined') {
+                try {
+                    WebApp = (await import('@twa-dev/sdk')).default;
+                } catch (e) { }
+            }
+
+            if (WebApp && WebApp.initData) {
                 WebApp.openTelegramLink(inviteLink);
             } else {
                 alert("Group created! Share this ID: " + group.id);

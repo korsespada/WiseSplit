@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { supabase } from '@/lib/supabase';
-import WebApp from '@twa-dev/sdk';
+
 
 const AppContext = createContext<{ isLoading: boolean }>({ isLoading: true });
 
@@ -15,6 +15,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const initApp = async () => {
+            let WebApp;
+            try {
+                WebApp = (await import('@twa-dev/sdk')).default;
+            } catch (e) {
+                console.error("Failed to load TWA SDK", e);
+                return;
+            }
+
             // 1. Check if running in Telegram
             if (typeof window !== 'undefined' && WebApp.initDataUnsafe?.user) {
                 WebApp.ready();

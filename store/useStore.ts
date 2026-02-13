@@ -12,7 +12,7 @@ interface AppState {
     setUser: (user: User) => void;
     setGroup: (group: Group) => void;
     fetchGroupData: (groupId: string) => Promise<void>;
-    addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
+    addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
