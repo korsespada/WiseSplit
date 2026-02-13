@@ -3,6 +3,7 @@
 import { useStore } from '@/store/useStore';
 import { CreateGroup } from '@/components/CreateGroup';
 import { Dashboard } from '@/components/Dashboard';
+import { GroupList } from '@/components/GroupList';
 
 export default function Home() {
   const { currentGroup, user, isLoading } = useStore();
@@ -25,9 +26,10 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-12 w-full">
+        <div className="mt-12 w-full pb-20">
           <CreateGroup />
-          <p className="text-center mt-4 text-sm text-gray-500">
+          <GroupList />
+          <p className="text-center mt-8 text-sm text-gray-400">
             Или попросите друга поделиться ссылкой-приглашением!
           </p>
         </div>

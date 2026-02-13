@@ -1,15 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { calculateSimplifiedDebts, Balance } from '@/lib/debtUtils';
 import { AddExpenseDialog } from '@/components/AddExpenseDialog';
+import { ExpenseDetailsDialog } from '@/components/ExpenseDetailsDialog';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { ChevronLeft } from 'lucide-react';
+import { Expense } from '@/types';
 
 export function Dashboard() {
-    const { currentGroup, expenses, members, user } = useStore();
+    const { currentGroup, expenses, members, user, resetGroup } = useStore();
+    const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
     const balances = useMemo(() => {
         const bal: Balance = {};
@@ -34,9 +39,21 @@ export function Dashboard() {
 
     return (
         <div className="p-4 space-y-6 pb-20">
-            <h1 className="text-2xl font-bold text-center mb-4">{currentGroup?.name}</h1>
+            <div className="flex items-center gap-2 mb-4">
+                <Button variant="ghost" size="icon" onClick={resetGroup}>
+                    <ChevronLeft className="w-6 h-6" />
+                </Button>
+                <h1 className="text-xl font-bold flex-1 text-center truncate">{currentGroup?.name}</h1>
+                <div className="w-10"></div>
+            </div>
 
             <AddExpenseDialog />
+
+            <ExpenseDetailsDialog
+                open={!!selectedExpense}
+                expense={selectedExpense}
+                onClose={() => setSelectedExpense(null)}
+            />
 
             <Card>
                 <CardHeader>
@@ -68,7 +85,11 @@ export function Dashboard() {
                 <CardContent>
                     <ul className="space-y-4">
                         {expenses.map(exp => (
-                            <li key={exp.id} className="border-b last:border-0 pb-3">
+                            <li
+                                key={exp.id}
+                                className="border-b last:border-0 pb-3 cursor-pointer hover:bg-gray-50 transition p-2 rounded -mx-2"
+                                onClick={() => setSelectedExpense(exp)}
+                            >
                                 <div className="flex justify-between font-medium">
                                     <span>{exp.description}</span>
                                     <span className="font-bold">{exp.amount.toFixed(2)} ₽</span>

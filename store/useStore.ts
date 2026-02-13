@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, Group, Expense, Member, Split } from '@/types';
+import { User, Group, Expense, Member, Split, Comment } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 interface AppState {
@@ -12,9 +12,12 @@ interface AppState {
     userGroups: Group[];
     setUser: (user: User) => void;
     setGroup: (group: Group) => void;
+    resetGroup: () => void;
     fetchUserGroups: (userId: number) => Promise<Group[]>;
     fetchGroupData: (groupId: string) => Promise<void>;
     addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
+    fetchComments: (expenseId: string) => Promise<Comment[]>;
+    addComment: (expenseId: string, text: string) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -27,6 +30,7 @@ export const useStore = create<AppState>((set, get) => ({
 
     setUser: (user) => set({ user }),
     setGroup: (group) => set({ currentGroup: group }),
+    resetGroup: () => set({ currentGroup: null }),
 
     fetchUserGroups: async (userId) => {
         const { data, error } = await supabase
@@ -118,6 +122,37 @@ export const useStore = create<AppState>((set, get) => ({
             await get().fetchGroupData(currentGroup.id);
         } catch (e) {
             console.error(e);
+        }
+    },
+
+    fetchComments: async (expenseId) => {
+        const { data, error } = await supabase
+            .from('comments')
+            .select('*')
+            .eq('expense_id', expenseId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching comments:', error);
+            return [];
+        }
+        return data as Comment[];
+    },
+
+    addComment: async (expenseId, text) => {
+        const { user } = get();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('comments')
+            .insert({
+                expense_id: expenseId,
+                user_id: user.id,
+                text
+            });
+
+        if (error) {
+            console.error('Error adding comment:', error);
         }
     },
 }));

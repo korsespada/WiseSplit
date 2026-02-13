@@ -12,6 +12,14 @@ export interface Group {
     created_at?: string;
 }
 
+export interface Comment {
+    id: string;
+    expense_id: string;
+    user_id: number;
+    text: string;
+    created_at: string;
+}
+
 export interface Expense {
     id: string;
     group_id: string;
