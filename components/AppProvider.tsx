@@ -51,11 +51,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                     // Attempt to join group automatically
                     await joinGroup(startParam, tgUser.id);
                 } else {
-                    // Just fetch groups and select the first one if it exists
-                    const groups = await fetchUserGroups(tgUser.id);
-                    if (groups.length > 0) {
-                        await fetchGroupData(groups[0].id);
-                    }
+                    // Just fetch groups
+                    await fetchUserGroups(tgUser.id);
                 }
             } else {
                 // Fallback or Dev mode (Mock User)
@@ -73,10 +70,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 setUser(mockUser);
 
                 // Fetch groups for the user
-                const groups = await fetchUserGroups(mockUser.id);
-                if (groups.length > 0 && !WebApp.initDataUnsafe?.start_param) {
-                    await fetchGroupData(groups[0].id);
-                }
+                await fetchUserGroups(mockUser.id);
             }
             setIsLoading(false);
         };
