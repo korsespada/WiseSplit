@@ -17,6 +17,8 @@ interface AppState {
     fetchGroupData: (groupId: string) => Promise<void>;
     deleteGroup: (groupId: string) => Promise<void>;
     addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
+    deleteExpense: (expenseId: string) => Promise<void>;
+    updateExpenseAmount: (expenseId: string, newAmount: number) => Promise<void>;
     fetchComments: (expenseId: string) => Promise<Comment[]>;
     addComment: (expenseId: string, text: string) => Promise<void>;
 }
@@ -152,6 +154,58 @@ export const useStore = create<AppState>((set, get) => ({
             await get().fetchGroupData(currentGroup.id);
         } catch (e) {
             console.error(e);
+        }
+    },
+
+    deleteExpense: async (expenseId) => {
+        const { currentGroup } = get();
+        if (!currentGroup) return;
+
+        try {
+            const { error } = await supabase
+                .from('expenses')
+                .delete()
+                .eq('id', expenseId);
+
+            if (error) throw error;
+            await get().fetchGroupData(currentGroup.id);
+        } catch (e) {
+            console.error('Error deleting expense:', e);
+            alert('Ошибка при удалении траты');
+        }
+    },
+
+    updateExpenseAmount: async (expenseId, newAmount) => {
+        const { currentGroup, expenses } = get();
+        if (!currentGroup) return;
+
+        try {
+            const expense = expenses.find(e => e.id === expenseId);
+            if (!expense) return;
+
+            // 1. Update expense amount
+            const { error: expError } = await supabase
+                .from('expenses')
+                .update({ amount: newAmount })
+                .eq('id', expenseId);
+
+            if (expError) throw expError;
+
+            // 2. Update splits proportionally 
+            const splitAmount = newAmount / expense.splits.length;
+
+            for (const split of expense.splits) {
+                const { error: splitError } = await supabase
+                    .from('splits')
+                    .update({ amount: splitAmount })
+                    .eq('id', split.id);
+                if (splitError) throw splitError;
+            }
+
+            await get().fetchGroupData(currentGroup.id);
+        } catch (e) {
+            console.error('Error updating expense:', e);
+            alert('Ошибка при обновлении траты');
         }
     },
 

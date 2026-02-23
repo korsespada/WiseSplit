@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Expense, Comment } from '@/types';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Send, UserPlus } from 'lucide-react';
+import { Send, UserPlus, Trash2, Edit2, X, Check } from 'lucide-react';
 
 interface ExpenseDetailsDialogProps {
     expense: Expense | null;
@@ -17,10 +17,20 @@ interface ExpenseDetailsDialogProps {
 }
 
 export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsDialogProps) {
-    const { user, members, fetchComments, addComment, currentGroup } = useStore();
+    const { user, members, fetchComments, addComment, currentGroup, updateExpenseAmount, deleteExpense } = useStore();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [newAmount, setNewAmount] = useState('');
+
+    useEffect(() => {
+        if (expense) {
+            setNewAmount(expense.amount.toString());
+            setIsEditing(false);
+        }
+    }, [expense, open]);
 
     useEffect(() => {
         if (expense && open) {
@@ -41,9 +51,29 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
         setComments(data);
     };
 
-    const getUserName = (id: number) => {
-        const member = members.find(m => m.id === id);
-        return member ? (member.id === user?.id ? 'Вы' : member.first_name) : `Пользователь ${id}`;
+    const getUserName = (id: number | string) => {
+        const member = members.find(m => String(m.id) === String(id));
+        return member ? (String(member.id) === String(user?.id) ? 'Вы' : member.first_name) : `Пользователь ${id}`;
+    };
+
+    const isAuthor = String(user?.id) === String(expense?.payer_id);
+
+    const handleDelete = async () => {
+        if (!expense) return;
+        if (confirm('Вы уверены, что хотите удалить эту трату?')) {
+            await deleteExpense(expense.id);
+            onClose();
+        }
+    };
+
+    const handleUpdateAmount = async () => {
+        if (!expense) return;
+        const parsed = parseFloat(newAmount);
+        if (!isNaN(parsed) && parsed > 0) {
+            await updateExpenseAmount(expense.id, parsed);
+            setIsEditing(false);
+            onClose();
+        }
     };
 
     const handleInvite = async () => {
@@ -72,8 +102,18 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
     return (
         <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
             <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>{expense.description}</DialogTitle>
+                <DialogHeader className="flex flex-row items-center justify-between mt-2 mr-4">
+                    <DialogTitle className="text-xl">{expense.description}</DialogTitle>
+                    {isAuthor && (
+                        <div className="flex gap-1 items-center">
+                            <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)} className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50">
+                                <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    )}
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-1">
@@ -82,9 +122,27 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
                             <p className="text-sm text-muted-foreground">Оплатил</p>
                             <p className="font-semibold">{getUserName(expense.payer_id)}</p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-bold">{expense.amount.toFixed(2)} ₽</p>
-                            <p className="text-xs text-muted-foreground">{format(new Date(expense.created_at), 'd MMM, HH:mm', { locale: ru })}</p>
+                        <div className="text-right flex flex-col items-end">
+                            {isEditing ? (
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Input
+                                        type="number"
+                                        value={newAmount}
+                                        onChange={e => setNewAmount(e.target.value)}
+                                        className="w-24 h-8 text-right font-bold py-0 pr-1 pl-1"
+                                        autoFocus
+                                    />
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50" onClick={handleUpdateAmount}>
+                                        <Check className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:bg-gray-200" onClick={() => setIsEditing(false)}>
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <p className="text-2xl font-bold">{expense.amount.toFixed(2)} ₽</p>
+                            )}
+                            {!isEditing && <p className="text-xs text-muted-foreground">{format(new Date(expense.created_at), 'd MMM, HH:mm', { locale: ru })}</p>}
                         </div>
                     </div>
 

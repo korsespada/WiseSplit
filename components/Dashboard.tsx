@@ -120,10 +120,10 @@ export function Dashboard() {
                                                 <AvatarFallback className="bg-red-50 text-red-600">{fromUser?.first_name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-baseline gap-1.5 truncate">
-                                                    <span className="font-semibold truncate max-w-[40%]">{getUserName(debt.from)}</span>
-                                                    <span className="text-xs text-muted-foreground shrink-0">➜</span>
-                                                    <span className="font-semibold truncate max-w-[40%]">{getUserName(debt.to)}</span>
+                                                <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-sm">
+                                                    <span className="font-semibold text-gray-900 truncate max-w-[40%]">{getUserName(debt.from)}</span>
+                                                    <span className="text-muted-foreground">должен</span>
+                                                    <span className="font-semibold text-gray-900 truncate max-w-[40%]">{getUserName(debt.to)}</span>
                                                 </div>
                                                 <div className="text-sm font-bold mt-0.5 text-gray-900">{debt.amount.toFixed(2)} ₽</div>
                                             </div>
