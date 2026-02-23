@@ -104,15 +104,15 @@ export function AddExpenseDialog() {
                             />
                         </div>
                         <div className="relative">
-                            <span className="absolute left-0 top-3 text-gray-400 text-xl font-medium">₽</span>
                             <Input
                                 id="amount"
                                 type="number"
-                                className="text-3xl pl-6 py-4 h-14 bg-transparent border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary font-bold transition-colors"
+                                className="text-3xl pr-8 py-4 h-14 bg-transparent border-0 border-b rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-primary font-bold transition-colors w-full"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0"
                             />
+                            <span className="absolute right-0 top-3 text-gray-400 text-3xl font-medium">₽</span>
                         </div>
                     </div>
 

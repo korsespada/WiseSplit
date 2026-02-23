@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage, AvatarGroup } from '@/components/u
 import { ChevronRight } from 'lucide-react';
 
 export function GroupList() {
-    const { userGroups, setGroup, user } = useStore();
+    const { userGroups, fetchGroupData, user } = useStore();
 
     if (userGroups.length === 0) return null;
 
@@ -25,7 +25,7 @@ export function GroupList() {
                         <Card
                             key={group.id}
                             className="cursor-pointer border-0 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-                            onClick={() => setGroup(group)}
+                            onClick={() => fetchGroupData(group.id)}
                         >
                             <CardContent className="p-4 flex items-center justify-between">
                                 <div className="space-y-1">
