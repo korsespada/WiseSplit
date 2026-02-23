@@ -50,7 +50,7 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
         if (!currentGroup) return;
         const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
         // Deep link to expense could be better, but for now group invite
-        const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/start?startapp=${currentGroup.id}`)}&text=${encodeURIComponent(`Посмотри трату "${expense?.description}" в группе "${currentGroup.name}"!`)}`;
+        const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}?startapp=${currentGroup.id}`)}&text=${encodeURIComponent(`Посмотри трату "${expense?.description}" в группе "${currentGroup.name}"!`)}`;
 
         let WebApp;
         if (typeof window !== 'undefined') {

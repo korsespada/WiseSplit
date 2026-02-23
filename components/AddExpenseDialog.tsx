@@ -59,7 +59,7 @@ export function AddExpenseDialog() {
     const handleInvite = async () => {
         if (!currentGroup) return;
         const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
-        const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/start?startapp=${currentGroup.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${currentGroup.name}" в FairShare!`)}`;
+        const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}?startapp=${currentGroup.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${currentGroup.name}" в FairShare!`)}`;
 
         let WebApp;
         if (typeof window !== 'undefined') {
