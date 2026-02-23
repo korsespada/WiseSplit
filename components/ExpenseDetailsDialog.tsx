@@ -9,6 +9,7 @@ import { Expense, Comment } from '@/types';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Send, UserPlus, Trash2, Edit2, X, Check } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface ExpenseDetailsDialogProps {
     expense: Expense | null;
@@ -17,7 +18,7 @@ interface ExpenseDetailsDialogProps {
 }
 
 export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsDialogProps) {
-    const { user, members, fetchComments, addComment, currentGroup, updateExpenseAmount, deleteExpense } = useStore();
+    const { user, members, fetchComments, addComment, currentGroup, updateExpenseAmount, deleteExpense, updateExpenseSplits } = useStore();
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
@@ -25,10 +26,15 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
     const [isEditing, setIsEditing] = useState(false);
     const [newAmount, setNewAmount] = useState('');
 
+    const [isEditingSplits, setIsEditingSplits] = useState(false);
+    const [selectedSplitIds, setSelectedSplitIds] = useState<number[]>([]);
+
     useEffect(() => {
         if (expense) {
             setNewAmount(expense.amount.toString());
             setIsEditing(false);
+            setIsEditingSplits(false);
+            setSelectedSplitIds(expense.splits.map(s => s.user_id));
         }
     }, [expense, open]);
 
@@ -106,9 +112,6 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
                     <DialogTitle className="text-xl">{expense.description}</DialogTitle>
                     {isAuthor && (
                         <div className="flex gap-1 items-center">
-                            <Button variant="ghost" size="icon" onClick={() => setIsEditing(!isEditing)} className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50">
-                                <Edit2 className="w-4 h-4" />
-                            </Button>
                             <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
                                 <Trash2 className="w-4 h-4" />
                             </Button>
@@ -140,31 +143,76 @@ export function ExpenseDetailsDialog({ expense, open, onClose }: ExpenseDetailsD
                                     </Button>
                                 </div>
                             ) : (
-                                <p className="text-2xl font-bold">{expense.amount.toFixed(2)} ₽</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-2xl font-bold">{expense.amount.toFixed(2)} ₽</p>
+                                    {isAuthor && (
+                                        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-6 w-6 text-blue-500 hover:bg-blue-50">
+                                            <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                </div>
                             )}
                             {!isEditing && <p className="text-xs text-muted-foreground">{format(new Date(expense.created_at), 'd MMM, HH:mm', { locale: ru })}</p>}
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="text-sm font-medium mb-2">Кто платит:</h4>
-                        <ul className="space-y-1 text-sm">
-                            {expense.splits.map(split => (
-                                <li key={split.id} className="flex justify-between">
-                                    <span>{getUserName(split.user_id)}</span>
-                                    <span>{split.amount.toFixed(2)} ₽</span>
-                                </li>
-                            ))}
-                        </ul>
+                        <div className="flex justify-between items-center mb-2">
+                            <h4 className="text-sm font-medium">Кто платит:</h4>
+                            {isAuthor && (
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    if (isEditingSplits) {
+                                        updateExpenseSplits(expense.id, selectedSplitIds);
+                                    }
+                                    setIsEditingSplits(!isEditingSplits);
+                                }} className="h-6 text-xs px-2 text-primary hover:bg-primary/10">
+                                    {isEditingSplits ? 'Сохранить' : 'Изменить'}
+                                </Button>
+                            )}
+                        </div>
+                        {isEditingSplits ? (
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                    {members.map(member => {
+                                        const isSelected = selectedSplitIds.includes(member.id);
+                                        return (
+                                            <div
+                                                key={member.id}
+                                                className={`flex items-center p-2 rounded-xl border transition cursor-pointer select-none ${isSelected ? 'bg-primary/5 border-primary/50' : 'bg-gray-50/50 border-gray-100'}`}
+                                                onClick={() => setSelectedSplitIds(prev => prev.includes(member.id) ? prev.filter(id => id !== member.id) : [...prev, member.id])}
+                                            >
+                                                <Avatar className="size-6 mr-2">
+                                                    <AvatarImage src={member.photo_url || ''} />
+                                                    <AvatarFallback className="text-[10px] bg-gray-200">{member.first_name[0]}</AvatarFallback>
+                                                </Avatar>
+                                                <span className="text-xs font-medium truncate flex-1">{getUserName(member.id)}</span>
+                                                <div className={`ml-1 flex items-center justify-center size-4 rounded-full border ${isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'}`}>
+                                                    {isSelected && <Check className="w-2 h-2 text-white" />}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handleInvite} className="w-full text-xs h-8">
+                                    <UserPlus className="w-3 h-3 mr-2" />
+                                    Нет нужного? Пригласить по ссылке
+                                </Button>
+                            </div>
+                        ) : (
+                            <ul className="space-y-1 text-sm">
+                                {expense.splits.map(split => (
+                                    <li key={split.id} className="flex justify-between">
+                                        <span>{getUserName(split.user_id)}</span>
+                                        <span>{split.amount.toFixed(2)} ₽</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
 
                     <div className="border-t pt-4">
                         <div className="flex justify-between items-center mb-2">
                             <h4 className="text-sm font-medium">Комментарии</h4>
-                            <Button variant="ghost" size="sm" onClick={handleInvite} className="h-6 text-xs px-2">
-                                <UserPlus className="w-3 h-3 mr-1" />
-                                Пригласить
-                            </Button>
                         </div>
 
                         <div className="space-y-3 mb-4">

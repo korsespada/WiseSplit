@@ -19,6 +19,7 @@ interface AppState {
     addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
     deleteExpense: (expenseId: string) => Promise<void>;
     updateExpenseAmount: (expenseId: string, newAmount: number) => Promise<void>;
+    updateExpenseSplits: (expenseId: string, userIds: number[]) => Promise<void>;
     fetchComments: (expenseId: string) => Promise<Comment[]>;
     addComment: (expenseId: string, text: string) => Promise<void>;
 }
@@ -206,6 +207,42 @@ export const useStore = create<AppState>((set, get) => ({
         } catch (e) {
             console.error('Error updating expense:', e);
             alert('Ошибка при обновлении траты');
+        }
+    },
+
+    updateExpenseSplits: async (expenseId, userIds) => {
+        const { currentGroup, expenses } = get();
+        if (!currentGroup || userIds.length === 0) return;
+
+        try {
+            const expense = expenses.find(e => e.id === expenseId);
+            if (!expense) return;
+
+            // 1. Delete all existing splits for this expense
+            const { error: delError } = await supabase
+                .from('splits')
+                .delete()
+                .eq('expense_id', expenseId);
+            if (delError) throw delError;
+
+            // 2. Insert new splits
+            const splitAmount = expense.amount / userIds.length;
+            const newSplits = userIds.map(id => ({
+                expense_id: expenseId,
+                user_id: id,
+                amount: splitAmount,
+                is_paid: false
+            }));
+
+            const { error: insError } = await supabase
+                .from('splits')
+                .insert(newSplits);
+            if (insError) throw insError;
+
+            await get().fetchGroupData(currentGroup.id);
+        } catch (e) {
+            console.error('Error updating splits:', e);
+            alert('Ошибка при обновлении участников траты');
         }
     },
 

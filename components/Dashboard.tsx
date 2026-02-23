@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ChevronLeft, UserPlus, Trash2, ReceiptText } from 'lucide-react';
 import { Expense } from '@/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage, AvatarGroup } from '@/components/ui/avatar';
 
 export function Dashboard() {
     const { currentGroup, expenses, members, user, resetGroup, deleteGroup } = useStore();
@@ -151,8 +151,23 @@ export function Dashboard() {
                                         className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition"
                                         onClick={() => setSelectedExpense(exp)}
                                     >
-                                        <div className="size-12 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                                            <ReceiptText className="w-5 h-5 text-gray-500" />
+                                        <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                                            <AvatarGroup className="-space-x-4">
+                                                {exp.splits.slice(0, 3).map(split => {
+                                                    const spUser = getUser(split.user_id);
+                                                    return (
+                                                        <Avatar key={split.user_id} className="size-8 border-2 border-white ring-0">
+                                                            <AvatarImage src={spUser?.photo_url} />
+                                                            <AvatarFallback className="text-[10px] bg-gray-100 text-gray-600">{spUser?.first_name?.[0]}</AvatarFallback>
+                                                        </Avatar>
+                                                    );
+                                                })}
+                                                {exp.splits.length > 3 && (
+                                                    <div className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium border-2 border-white ring-0">
+                                                        +{exp.splits.length - 3}
+                                                    </div>
+                                                )}
+                                            </AvatarGroup>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start gap-2 mb-1">
