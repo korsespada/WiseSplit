@@ -17,11 +17,11 @@ export function AddExpenseDialog() {
     const [payerId, setPayerId] = useState<number | null>(null);
 
     useEffect(() => {
-        if (open && user && selectedUsers.length === 0) {
-            setSelectedUsers([user.id]);
+        if (open && user && selectedUsers.length === 0 && members.length > 0) {
+            setSelectedUsers(members.map(m => m.id));
             setPayerId(user.id);
         }
-    }, [open, user]);
+    }, [open, user, members]);
 
     const handleSubmit = async () => {
         if (!description || !amount || selectedUsers.length === 0 || !payerId) return;
