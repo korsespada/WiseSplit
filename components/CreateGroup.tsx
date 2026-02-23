@@ -37,7 +37,8 @@ export function CreateGroup() {
 
             // Generate invite link
             const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
-            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}?startapp=${group.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${group.name}" в FairShare!`)}`;
+            const appShortName = process.env.NEXT_PUBLIC_BOT_SHORT_NAME || 'app';
+            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/${appShortName}?startapp=${group.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${group.name}" в FairShare!`)}`;
 
             let WebApp;
             if (typeof window !== 'undefined') {
