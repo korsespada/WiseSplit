@@ -5,11 +5,10 @@ import { useStore } from '@/store/useStore';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
+import { Link, PlusCircle } from 'lucide-react';
 
 export function CreateGroup() {
-    const { user, setGroup, fetchGroupData } = useStore();
+    const { user, fetchGroupData } = useStore();
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -26,61 +25,51 @@ export function CreateGroup() {
 
             if (error) throw error;
 
-            // Add creator as member
             await supabase.from('group_members').insert({
                 group_id: group.id,
                 user_id: user.id
             });
 
-            // Fetch newly created group data to populate store correctly (clearing old expenses, setting members)
             await fetchGroupData(group.id);
-
-            // Generate invite link
-            const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'WiseSplitBot';
-            const appShortName = process.env.NEXT_PUBLIC_BOT_SHORT_NAME || 'app';
-            const inviteLink = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/${botUsername}/${appShortName}?startapp=${group.id}`)}&text=${encodeURIComponent(`Присоединяйся к моей группе "${group.name}" в FairShare!`)}`;
-
-            let WebApp;
-            if (typeof window !== 'undefined') {
-                try {
-                    WebApp = (await import('@twa-dev/sdk')).default;
-                } catch (e) { }
-            }
-
-            if (WebApp && WebApp.initData) {
-                WebApp.openTelegramLink(inviteLink);
-            } else {
-                alert("Группа создана! Поделитесь этим ID: " + group.id);
-            }
-
         } catch (e) {
             console.error(e);
             const errorMessage = (e as any)?.message || JSON.stringify(e);
-            alert(`Ошибка при создании группы: ${errorMessage}`);
+            alert(`Ошибка при создании: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Card className="w-full max-w-md mx-auto mt-10">
-            <CardHeader>
-                <CardTitle>Создать новую группу</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <div className="w-full space-y-4 px-4 py-8">
+            <div className="text-center space-y-2 mb-6">
+                <h2 className="text-2xl font-bold tracking-tight">Новое событие</h2>
+                <p className="text-muted-foreground text-sm">Создайте группу для разделения трат с друзьями</p>
+            </div>
+
+            <div className="space-y-4 bg-white p-5 rounded-2xl shadow-sm border">
                 <Input
-                    placeholder="Название группы (напр. Поездка в Питер)"
+                    className="text-lg py-6 bg-gray-50/50 border-0 shadow-none focus-visible:ring-1"
+                    placeholder="Например: Поездка в Питер 🚂"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    autoFocus
                 />
                 <Button
                     onClick={handleCreate}
-                    disabled={loading || !name}
-                    className="w-full"
+                    disabled={loading || !name.trim()}
+                    className="w-full text-lg py-6 rounded-xl font-semibold gap-2"
                 >
-                    {loading ? 'Создание...' : 'Создать и пригласить друзей'}
+                    {loading ? (
+                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                        <>
+                            <PlusCircle className="w-5 h-5" />
+                            Создать
+                        </>
+                    )}
                 </Button>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

@@ -15,6 +15,7 @@ interface AppState {
     resetGroup: () => void;
     fetchUserGroups: (userId: number) => Promise<Group[]>;
     fetchGroupData: (groupId: string) => Promise<void>;
+    deleteGroup: (groupId: string) => Promise<void>;
     addExpense: (expense: Omit<Expense, 'id' | 'created_at' | 'splits' | 'group_id'> & { splits: Omit<Split, 'id' | 'expense_id'>[] }) => Promise<void>;
     fetchComments: (expenseId: string) => Promise<Comment[]>;
     addComment: (expenseId: string, text: string) => Promise<void>;
@@ -35,8 +36,14 @@ export const useStore = create<AppState>((set, get) => ({
     fetchUserGroups: async (userId) => {
         const { data, error } = await supabase
             .from('group_members')
-            .select('groups(*)')
-            .eq('user_id', userId);
+            .select(`
+                groups (
+                    *,
+                    members:group_members(users(*))
+                )
+            `)
+            .eq('user_id', userId)
+            .order('joined_at', { ascending: false });
 
         if (error) {
             console.error('Error fetching user groups:', error);
@@ -81,6 +88,29 @@ export const useStore = create<AppState>((set, get) => ({
 
         } catch (error) {
             console.error('Error fetching group data:', error);
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    deleteGroup: async (groupId) => {
+        set({ isLoading: true });
+        try {
+            const { error } = await supabase
+                .from('groups')
+                .delete()
+                .eq('id', groupId);
+
+            if (error) throw error;
+
+            const { user } = get();
+            if (user) {
+                await get().fetchUserGroups(user.id);
+            }
+            set({ currentGroup: null, expenses: [], members: [] });
+        } catch (error) {
+            console.error('Error deleting group:', error);
+            alert('Ошибка при удалении группы');
         } finally {
             set({ isLoading: false });
         }
